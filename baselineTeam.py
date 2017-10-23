@@ -4,7 +4,7 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-# 
+#
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
@@ -82,8 +82,8 @@ class ReflexCaptureAgent(CaptureAgent):
     # print maxValue
     # -2039
 
-    print bestActions
-    util.pause()
+    #print bestActions
+    #util.pause()
 
     foodLeft = len(self.getFood(gameState).asList())
 
@@ -143,6 +143,9 @@ class ReflexCaptureAgent(CaptureAgent):
     features = util.Counter()
     successor = self.getSuccessor(gameState, action)
     features['successorScore'] = self.getScore(successor)
+
+    # print features
+    # util.pause()
     return features
 
   def getWeights(self, gameState, action):
@@ -161,8 +164,12 @@ class OffensiveReflexAgent(ReflexCaptureAgent):
   def getFeatures(self, gameState, action):
     features = util.Counter()
     successor = self.getSuccessor(gameState, action)
-    foodList = self.getFood(successor).asList()    
+    foodList = self.getFood(successor).asList()
     features['successorScore'] = -len(foodList)#self.getScore(successor)
+
+    # features = (negativo) lista de comidas restantes (?)
+    # print features
+    # util.pause()
 
     # Compute distance to the nearest food
 
@@ -170,7 +177,10 @@ class OffensiveReflexAgent(ReflexCaptureAgent):
       myPos = successor.getAgentState(self.index).getPosition()
       minDistance = min([self.getMazeDistance(myPos, food) for food in foodList])
       features['distanceToFood'] = minDistance
+      # print features
+      # util.pause()
     return features
+
 
   def getWeights(self, gameState, action):
     return {'successorScore': 100, 'distanceToFood': -1}
@@ -190,21 +200,36 @@ class DefensiveReflexAgent(ReflexCaptureAgent):
     myState = successor.getAgentState(self.index)
     myPos = myState.getPosition()
 
+    # myState -> Ghost: (x,y)=(1.0, 1.0), Stop
+    # myPos -> (1.0, 1.0)
+    # print myState
+    # print myPos
+    # util.pause()
+
     # Computes whether we're on defense (1) or offense (0)
     features['onDefense'] = 1
     if myState.isPacman: features['onDefense'] = 0
 
     # Computes distance to invaders we can see
+    # Pega todos os inimigos
     enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
+    # Pega os 'invasores' -> inimigos que estao com estado isPacman True e que tem valor em getPosition()
     invaders = [a for a in enemies if a.isPacman and a.getPosition() != None]
     features['numInvaders'] = len(invaders)
+    # Se tem invasores
     if len(invaders) > 0:
+      # Pega a distancia do agente para cada invasor
       dists = [self.getMazeDistance(myPos, a.getPosition()) for a in invaders]
+      # print dists
+      # util.pause()
       features['invaderDistance'] = min(dists)
 
     if action == Directions.STOP: features['stop'] = 1
     rev = Directions.REVERSE[gameState.getAgentState(self.index).configuration.direction]
     if action == rev: features['reverse'] = 1
+
+    # print features
+    # util.pause()
 
     return features
 
