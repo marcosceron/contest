@@ -82,8 +82,8 @@ class ReflexCaptureAgent(CaptureAgent):
     # print maxValue
     # -2039
 
-    # print bestActions
-    # util.pause()
+    print bestActions
+    util.pause()
 
     foodLeft = len(self.getFood(gameState).asList())
 
@@ -161,11 +161,13 @@ class OffensiveReflexAgent(ReflexCaptureAgent):
   we give you to get an idea of what an offensive agent might look like,
   but it is by no means the best or only way to build an offensive agent.
   """
+
   def getFeatures(self, gameState, action):
     features = util.Counter()
     successor = self.getSuccessor(gameState, action)
     foodList = self.getFood(successor).asList()
     features['successorScore'] = -len(foodList)#self.getScore(successor)
+
 
     # features = (negativo) lista de comidas restantes (?)
     # print features
@@ -176,6 +178,8 @@ class OffensiveReflexAgent(ReflexCaptureAgent):
     if len(foodList) > 0: # This should always be True,  but better safe than sorry
       myPos = successor.getAgentState(self.index).getPosition()
       minDistance = min([self.getMazeDistance(myPos, food) for food in foodList])
+      print minDistance
+      print self.getOpponents()
       features['distanceToFood'] = minDistance
       # print features
       # util.pause()
