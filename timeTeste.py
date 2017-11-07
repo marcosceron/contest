@@ -23,7 +23,7 @@ import game
 #################
 
 def createTeam(firstIndex, secondIndex, isRed,
-               first = 'TestAgent', second = 'TestAgent'):
+               first = 'TestAgent', second = 'DefensiveReflexAgent'):
   """
   This function should return a list of two agents that will form the
   team, initialized using firstIndex and secondIndex as their agent
@@ -98,6 +98,7 @@ class TestAgent(CaptureAgent):
       return action
 
   def avaliaEstado(self, gameState, acao):
+
       # Dada a acao muda o estado do jogo
       novoEstadoDoJogo = gameState.generateSuccessor(self.index, acao)
 
@@ -110,52 +111,89 @@ class TestAgent(CaptureAgent):
       # Descobre a distancia ao inimigo mais proximo
       distInimigo = self.getDistanciaInimigoMaisProximo(gameState, myPos)
 
+      # metodo para pegar as comidas especiais
+      capsulaMaisProxima = 99999
+      capsulas = self.getCapsules(gameState)
+      if len(capsulas) > 0:
+          listaDistanciasCapsulas = [self.getMazeDistance(myPos, x) for x in capsulas]
+          capsulaMaisProxima = min(listaDistanciasCapsulas)
 
-      estadosInimigos = [novoEstadoDoJogo.getAgentState(i) for i in self.getOpponents(novoEstadoDoJogo)]
+      if capsulaMaisProxima == 0:
+          pontos = pontos - 10000
+      elif capsulaMaisProxima < 3:
+          pontos = pontos - 100
+      elif capsulaMaisProxima < 5:
+          pontos = pontos - 10
+
+
+      estadosInimigos = [gameState.getAgentState(i) for i in self.getOpponents(novoEstadoDoJogo)]
       defensores = [d for d in estadosInimigos if not d.isPacman and d.getPosition() != None]
       invasores = [i for i in estadosInimigos if i.isPacman and i.getPosition() != None]
+      defensoresAssustados = [a for a in defensores if a.scaredTimer>0 and a.getPosition() != None]
+      #defensoresNormais = [n for n in defensores if n.scaredTimer==0 and a.getPosition() != None]
+      #print defensoresAssustados
+
+      # if defensores:
+      #   print "Ta aqui"
+      #   print "Distancia inimigo %d" % distInimigo
+      #   if distInimigo == 0:
+      #     pontos = pontos - 100000  # Aumenta 100000 caso o inimigo esteja na mesma posicao
+      #   elif distInimigo < 3:
+      #     pontos = pontos - 100  # Aumenta 100 caso o inimigo esteja bem proximo
+      #   elif distInimigo < 5:
+      #     pontos = pontos - 10  # Aumenta 10 caso o inimigo esteja proximo
+      #   print "Pontuacao %d" % pontos
+      #   util.pause()
+
+      if invasores:
+        print "Invasores"
+        util.pause()
+        if distInimigo == 0:
+            pontos = pontos + 100000  # Aumenta 100000 caso o inimigo esteja na mesma posicao
+        elif distInimigo < 3:
+            pontos = pontos + 100  # Aumenta 100 caso o inimigo esteja bem proximo
+        elif distInimigo < 5:
+            pontos = pontos + 10  # Aumenta 10 caso o inimigo esteja proximo
+      if defensoresAssustados:
+        print "Defensores assustados"
+        util.pause()
+        if distInimigo == 0:
+          pontos = pontos - 100000  # Aumenta 100000 caso o inimigo esteja na mesma posicao
+        elif distInimigo < 3:
+          pontos = pontos - 100  # Aumenta 100 caso o inimigo esteja bem proximo
+        elif distInimigo < 5:
+          pontos = pontos - 10  # Aumenta 10 caso o inimigo esteja proximo
+
+
 
 
 
       # print estadosInimigos
       # util.pause()
       # print novoEstadoDoJogo.getAgentState(self.index).scaredTimer
-      # Calcula os pontos de acordo com a distancia com o inimigo
-      if distInimigo == 0:
-          pontos = pontos + 100000  # Aumenta 100000 caso o inimigo esteja na mesma posicao
-      elif distInimigo < 3:
-          pontos = pontos + 100  # Aumenta 100 caso o inimigo esteja bem proximo
-      elif distInimigo < 5:
-          pontos = pontos + 10  # Aumenta 10 caso o inimigo esteja proximo
+
 
       # Pega as coordenadas atuais (x,y) e as futuras (vx, vy) baseadas na acao
-      x, y = gameState.getAgentState(self.index).getPosition()
-      vx, vy = Actions.directionToVector(acao)
-      # print Actions.directionToVector(acao)
-      # util.pause()
-      newx = int(x + vx)
-      newy = int(y + vy)
+      # x, y = gameState.getAgentState(self.index).getPosition()
+      # vx, vy = Actions.directionToVector(acao)
+      # # print Actions.directionToVector(acao)
+      # # util.pause()
+      # newx = int(x + vx)
+      # newy = int(y + vy)
 
-      # metodo para pegar as comidas especiais
-      comidasEspeciais = self.getCapsules(gameState)
-      # distanciaEspecial = [self.getMazeDistance(myPos,x) for x in comidasEspeciais]
+      print "Pontuacao %d" % pontos
 
-      # print minDistanciaEspecial
-      # util.pause()
-      # print comidasEspeciais
-      # util.pause()
-      for ex, ey in comidasEspeciais:
-          if newx == ex and newy == ey and novoEstadoDoJogo.getAgentState(self.index).isPacman:
-              # print "Pacman"
-              # print comidasEspeciais
-              # atribui peso para a comida especial
-              pontos = pontos -1000
+
+
 
       # Evitar ao maximo ficar parado
       if acao == Directions.STOP:
           pontos = pontos + 100
 
 
+
+      #print pontos
+      #util.pause()
       return pontos
 
   def getMinhaPosicao(self, gameState):
@@ -211,3 +249,138 @@ class TestAgent(CaptureAgent):
       return posComidaMaisProxima
 
 
+
+
+
+class ReflexCaptureAgent(CaptureAgent):
+  """
+  A base class for reflex agents that chooses score-maximizing actions
+  """
+
+  def registerInitialState(self, gameState):
+    self.start = gameState.getAgentPosition(self.index)
+    CaptureAgent.registerInitialState(self, gameState)
+
+  def chooseAction(self, gameState):
+    """
+    Picks among the actions with the highest Q(s,a).
+    """
+    actions = gameState.getLegalActions(self.index)
+
+    # You can profile your evaluation time by uncommenting these lines
+    # start = time.time()
+    values = [self.evaluate(gameState, a) for a in actions]
+    # print 'eval time for agent %d: %.4f' % (self.index, time.time() - start)
+
+    maxValue = max(values)
+    bestActions = [a for a, v in zip(actions, values) if v == maxValue]
+
+    foodLeft = len(self.getFood(gameState).asList())
+
+    if foodLeft <= 2:
+      bestDist = 9999
+      for action in actions:
+        successor = self.getSuccessor(gameState, action)
+        pos2 = successor.getAgentPosition(self.index)
+        dist = self.getMazeDistance(self.start,pos2)
+        if dist < bestDist:
+          bestAction = action
+          bestDist = dist
+      return bestAction
+
+    return random.choice(bestActions)
+
+  def getSuccessor(self, gameState, action):
+    """
+    Finds the next successor which is a grid position (location tuple).
+    """
+    successor = gameState.generateSuccessor(self.index, action)
+    pos = successor.getAgentState(self.index).getPosition()
+    if pos != util.nearestPoint(pos):
+      # Only half a grid position was covered
+      return successor.generateSuccessor(self.index, action)
+    else:
+      return successor
+
+  def evaluate(self, gameState, action):
+    """
+    Computes a linear combination of features and feature weights
+    """
+    features = self.getFeatures(gameState, action)
+    weights = self.getWeights(gameState, action)
+    return features * weights
+
+  def getFeatures(self, gameState, action):
+    """
+    Returns a counter of features for the state
+    """
+    features = util.Counter()
+    successor = self.getSuccessor(gameState, action)
+    features['successorScore'] = self.getScore(successor)
+    return features
+
+  def getWeights(self, gameState, action):
+    """
+    Normally, weights do not depend on the gamestate.  They can be either
+    a counter or a dictionary.
+    """
+    return {'successorScore': 1.0}
+
+class OffensiveReflexAgent(ReflexCaptureAgent):
+  """
+  A reflex agent that seeks food. This is an agent
+  we give you to get an idea of what an offensive agent might look like,
+  but it is by no means the best or only way to build an offensive agent.
+  """
+  def getFeatures(self, gameState, action):
+    features = util.Counter()
+    successor = self.getSuccessor(gameState, action)
+    foodList = self.getFood(successor).asList()
+    features['successorScore'] = -len(foodList)#self.getScore(successor)
+
+    # Compute distance to the nearest food
+
+    if len(foodList) > 0: # This should always be True,  but better safe than sorry
+      myPos = successor.getAgentState(self.index).getPosition()
+      minDistance = min([self.getMazeDistance(myPos, food) for food in foodList])
+      features['distanceToFood'] = minDistance
+    return features
+
+  def getWeights(self, gameState, action):
+    return {'successorScore': 100, 'distanceToFood': -1}
+
+class DefensiveReflexAgent(ReflexCaptureAgent):
+  """
+  A reflex agent that keeps its side Pacman-free. Again,
+  this is to give you an idea of what a defensive agent
+  could be like.  It is not the best or only way to make
+  such an agent.
+  """
+
+  def getFeatures(self, gameState, action):
+    features = util.Counter()
+    successor = self.getSuccessor(gameState, action)
+
+    myState = successor.getAgentState(self.index)
+    myPos = myState.getPosition()
+
+    # Computes whether we're on defense (1) or offense (0)
+    features['onDefense'] = 1
+    if myState.isPacman: features['onDefense'] = 0
+
+    # Computes distance to invaders we can see
+    enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
+    invaders = [a for a in enemies if a.isPacman and a.getPosition() != None]
+    features['numInvaders'] = len(invaders)
+    if len(invaders) > 0:
+      dists = [self.getMazeDistance(myPos, a.getPosition()) for a in invaders]
+      features['invaderDistance'] = min(dists)
+
+    if action == Directions.STOP: features['stop'] = 1
+    rev = Directions.REVERSE[gameState.getAgentState(self.index).configuration.direction]
+    if action == rev: features['reverse'] = 1
+
+    return features
+
+  def getWeights(self, gameState, action):
+    return {'numInvaders': -1000, 'onDefense': 100, 'invaderDistance': -10, 'stop': -100, 'reverse': -2}
