@@ -82,8 +82,8 @@ class ReflexCaptureAgent(CaptureAgent):
     # print maxValue
     # -2039
 
-    print bestActions
-    util.pause()
+    # print bestActions
+    # util.pause()
 
     foodLeft = len(self.getFood(gameState).asList())
 
@@ -91,7 +91,7 @@ class ReflexCaptureAgent(CaptureAgent):
     # util.pause()
 
     if foodLeft <= 2:
-      print "Entrou no IF"
+      #print "Entrou no IF"
       bestDist = 9999
       for action in actions:
         successor = self.getSuccessor(gameState, action)
@@ -129,7 +129,7 @@ class ReflexCaptureAgent(CaptureAgent):
     # print weights
     # {'distanceToFood': -1, 'successorScore': 100}
 
-    # print features * weights
+    print features * weights
     # -2040
 
     # util.pause()
@@ -178,8 +178,8 @@ class OffensiveReflexAgent(ReflexCaptureAgent):
     if len(foodList) > 0: # This should always be True,  but better safe than sorry
       myPos = successor.getAgentState(self.index).getPosition()
       minDistance = min([self.getMazeDistance(myPos, food) for food in foodList])
-      print minDistance
-      print self.getOpponents()
+      # print minDistance
+      # print self.getOpponents()
       features['distanceToFood'] = minDistance
       # print features
       # util.pause()
@@ -232,8 +232,8 @@ class DefensiveReflexAgent(ReflexCaptureAgent):
     rev = Directions.REVERSE[gameState.getAgentState(self.index).configuration.direction]
     if action == rev: features['reverse'] = 1
 
-    # print features
-    # util.pause()
+    print features
+    util.pause()
 
     return features
 
