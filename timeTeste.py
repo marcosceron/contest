@@ -249,6 +249,58 @@ class TestAgent(CaptureAgent):
       return posComidaMaisProxima
 
 
+class DefensivoAgent(CaptureAgent):
+    """
+    A Dummy agent to serve as an example of the necessary agent structure.
+    You should look at baselineTeam.py for more details about how to
+    create an agent as this is the bare minimum.
+    """
+
+    def registerInitialState(self, gameState):
+        """
+        This method handles the initial setup of the
+        agent to populate useful fields (such as what team
+        we're on).
+
+        A distanceCalculator instance caches the maze distances
+        between each pair of positions, so your agents can use:
+        self.distancer.getDistance(p1, p2)
+
+        IMPORTANT: This method may run for at most 15 seconds.
+        """
+
+        ''' 
+        Make sure you do not delete the following line. If you would like to
+        use Manhattan distances instead of maze distances in order to save
+        on initialization time, please take a look at
+        CaptureAgent.registerInitialState in captureAgents.py. 
+        '''
+        CaptureAgent.registerInitialState(self, gameState)
+
+        ''' 
+        Your initialization code goes here, if you need any.
+        '''
+
+    def chooseAction(self, gameState):
+        # Pega as acoes possiveis
+        legalActions = gameState.getLegalActions(self.index)
+
+        # Para cada acao possivel da um VALOR baseado no metodo evaluate
+        values = [self.avaliaEstado(gameState, a) for a in legalActions]
+
+        # Descobre o menor valor entre as acoes possiveis
+        minValue = min(values)
+
+        # Pega todas as acoes com o valor igual ao menor valor encontrado
+        bestActions = [a for a, v in zip(legalActions, values) if v == minValue]
+
+        # Sorteia entre as acoes com menor valor, a acao a ser realizada
+        action = random.choice(bestActions)
+
+        # Retorna a acao sorteada
+        return action
+
+    def avaliaEstado(self, gameState, acao):
 
 
 
@@ -326,29 +378,6 @@ class ReflexCaptureAgent(CaptureAgent):
     """
     return {'successorScore': 1.0}
 
-class OffensiveReflexAgent(ReflexCaptureAgent):
-  """
-  A reflex agent that seeks food. This is an agent
-  we give you to get an idea of what an offensive agent might look like,
-  but it is by no means the best or only way to build an offensive agent.
-  """
-  def getFeatures(self, gameState, action):
-    features = util.Counter()
-    successor = self.getSuccessor(gameState, action)
-    foodList = self.getFood(successor).asList()
-    features['successorScore'] = -len(foodList)#self.getScore(successor)
-
-    # Compute distance to the nearest food
-
-    if len(foodList) > 0: # This should always be True,  but better safe than sorry
-      myPos = successor.getAgentState(self.index).getPosition()
-      minDistance = min([self.getMazeDistance(myPos, food) for food in foodList])
-      features['distanceToFood'] = minDistance
-    return features
-
-  def getWeights(self, gameState, action):
-    return {'successorScore': 100, 'distanceToFood': -1}
-
 class DefensiveReflexAgent(ReflexCaptureAgent):
   """
   A reflex agent that keeps its side Pacman-free. Again,
@@ -368,7 +397,7 @@ class DefensiveReflexAgent(ReflexCaptureAgent):
     features['onDefense'] = 1
     if myState.isPacman: features['onDefense'] = 0
 
-    # Computes distance to invaders we can see
+    # Computa a distância para invasores que se podem enxergar
     enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
     invaders = [a for a in enemies if a.isPacman and a.getPosition() != None]
     features['numInvaders'] = len(invaders)
