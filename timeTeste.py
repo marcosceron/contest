@@ -23,7 +23,7 @@ import game
 #################
 
 def createTeam(firstIndex, secondIndex, isRed,
-               first = 'TestAgent', second = 'DefensivoAgent'):
+               first = 'MaisPertoAgent', second = 'DefensivoAgent'):
   """
   This function should return a list of two agents that will form the
   team, initialized using firstIndex and secondIndex as their agent
@@ -33,8 +33,8 @@ def createTeam(firstIndex, secondIndex, isRed,
   As a potentially helpful development aid, this function can take
   additional string-valued keyword arguments ("first" and "second" are
   such arguments in the case of this function), which will come from
-  the --redOpts and --blueOpts command-line arguments to capture.py.
   For the nightly contest, however, your team will be created without
+  the --redOpts and --blueOpts command-line arguments to capture.py.
   any extra arguments, so you should make sure that the default
   behavior is what you want for the nightly contest.
   """
@@ -133,21 +133,10 @@ class TestAgent(CaptureAgent):
       #defensoresNormais = [n for n in defensores if n.scaredTimer==0 and a.getPosition() != None]
       #print defensoresAssustados
 
-      # if defensores:
-      #   print "Ta aqui"
-      #   print "Distancia inimigo %d" % distInimigo
-      #   if distInimigo == 0:
-      #     pontos = pontos - 100000  # Aumenta 100000 caso o inimigo esteja na mesma posicao
-      #   elif distInimigo < 3:
-      #     pontos = pontos - 100  # Aumenta 100 caso o inimigo esteja bem proximo
-      #   elif distInimigo < 5:
-      #     pontos = pontos - 10  # Aumenta 10 caso o inimigo esteja proximo
-      #   print "Pontuacao %d" % pontos
-      #   util.pause()
 
       if invasores:
-        print "Invasores"
-        util.pause()
+        # print "Invasores"
+        # util.pause()
         if distInimigo == 0:
             pontos = pontos + 100000  # Aumenta 100000 caso o inimigo esteja na mesma posicao
         elif distInimigo < 3:
@@ -155,8 +144,8 @@ class TestAgent(CaptureAgent):
         elif distInimigo < 5:
             pontos = pontos + 10  # Aumenta 10 caso o inimigo esteja proximo
       if defensoresAssustados:
-        print "Defensores assustados"
-        util.pause()
+        # print "Defensores assustados"
+        # util.pause()
         if distInimigo == 0:
           pontos = pontos - 100000  # Aumenta 100000 caso o inimigo esteja na mesma posicao
         elif distInimigo < 3:
@@ -165,31 +154,9 @@ class TestAgent(CaptureAgent):
           pontos = pontos - 10  # Aumenta 10 caso o inimigo esteja proximo
 
 
-
-
-
-      # print estadosInimigos
-      # util.pause()
-      # print novoEstadoDoJogo.getAgentState(self.index).scaredTimer
-
-
-      # Pega as coordenadas atuais (x,y) e as futuras (vx, vy) baseadas na acao
-      # x, y = gameState.getAgentState(self.index).getPosition()
-      # vx, vy = Actions.directionToVector(acao)
-      # # print Actions.directionToVector(acao)
-      # # util.pause()
-      # newx = int(x + vx)
-      # newy = int(y + vy)
-
-      print "Pontuacao %d" % pontos
-
-
-
-
       # Evitar ao maximo ficar parado
       if acao == Directions.STOP:
           pontos = pontos + 100
-
 
 
       #print pontos
@@ -312,19 +279,116 @@ class DefensivoAgent(CaptureAgent):
 
         # Pega todos os inimigos
         inimigos = [novoEstadoDoJogo.getAgentState(i) for i in self.getOpponents(novoEstadoDoJogo)]
+        distanciaInimigos = [self.getMazeDistance(myPos, i.getPosition()) for i in inimigos]
+        distanciaInimigoMaisProximo = min(distanciaInimigos)
+        pontos = distanciaInimigoMaisProximo
         # Pega os 'invasores' -> inimigos que estao com estado isPacman True e que tem valor em getPosition()
         invasores = [a for a in inimigos if a.isPacman and a.getPosition() != None]
 
-        pontos = -len(invasores)
+        #pontos = len(invasores) + 1000
+        # Se o agente esta assustado
+        if myState.scaredTimer > 0:
+            print "Estou assustado"
+            util.pause()
+            if distanciaInimigoMaisProximo == 0:
+                pontos = pontos + 100000  # Aumenta 100000 caso o inimigo esteja na mesma posicao
+            elif distanciaInimigoMaisProximo < 3:
+                pontos = pontos + 100  # Aumenta 100 caso o inimigo esteja bem proximo
+            elif distanciaInimigoMaisProximo < 5:
+                pontos = pontos + 10  # Aumenta 10 caso o inimigo esteja proximo
+
+
 
 
         if myState.isPacman:
             # Atacando
             pontos = pontos + 99999
 
-        if len(invasores) > 0:
-            distanciaInvasores = [self.getMazeDistance(myPos, a.getPosition()) for a in invasores]
-            distanciaInvasorMaisProximo = min(distanciaInvasores)
-            pontos = pontos + distanciaInvasorMaisProximo*10
+        # if len(invasores) > 0:
+        #     distanciaInvasores = [self.getMazeDistance(myPos, a.getPosition()) for a in invasores]
+        #     distanciaInvasorMaisProximo = min(distanciaInvasores)
+        #     pontos = pontos + distanciaInvasorMaisProximo*10
+
+        # Evitar ao maximo ficar parado
+        if acao == Directions.STOP:
+            pontos = pontos + 100
+
+        # Evitar fazer a ação contrária
+        rev = Directions.REVERSE[gameState.getAgentState(self.index).configuration.direction]
+        if acao == rev: pontos = pontos + 10
 
         return pontos
+
+
+class MaisPertoAgent(CaptureAgent):
+    """
+    A Dummy agent to serve as an example of the necessary agent structure.
+    You should look at baselineTeam.py for more details about how to
+    create an agent as this is the bare minimum.
+    """
+
+    def registerInitialState(self, gameState):
+        """
+        This method handles the initial setup of the
+        agent to populate useful fields (such as what team
+        we're on).
+
+        A distanceCalculator instance caches the maze distances
+        between each pair of positions, so your agents can use:
+        self.distancer.getDistance(p1, p2)
+
+        IMPORTANT: This method may run for at most 15 seconds.
+        """
+
+        ''' 
+        Make sure you do not delete the following line. If you would like to
+        use Manhattan distances instead of maze distances in order to save
+        on initialization time, please take a look at
+        CaptureAgent.registerInitialState in captureAgents.py. 
+        '''
+        CaptureAgent.registerInitialState(self, gameState)
+
+        ''' 
+        Your initialization code goes here, if you need any.
+        '''
+
+    def chooseAction(self, gameState):
+        # Pega as acoes possiveis
+        legalActions = gameState.getLegalActions(self.index)
+
+        # Para cada acao possivel da um VALOR baseado no metodo evaluate
+        values = [self.avaliaEstado(gameState, a) for a in legalActions]
+
+        # Descobre o menor valor entre as acoes possiveis
+        minValue = min(values)
+
+        # Pega todas as acoes com o valor igual ao menor valor encontrado
+        bestActions = [a for a, v in zip(legalActions, values) if v == minValue]
+
+        # Sorteia entre as acoes com menor valor, a acao a ser realizada
+        action = random.choice(bestActions)
+
+        # Retorna a acao sorteada
+        return action
+
+    def avaliaEstado(self, gameState, acao):
+        # Dada a acao muda o estado do jogo
+        novoEstadoDoJogo = gameState.generateSuccessor(self.index, acao)
+
+        # Descobre a posicao do agente apos a acao
+        myPos = novoEstadoDoJogo.getAgentPosition(self.index)
+
+        # Pega a lista de comidas do labirinto
+        comida = self.getFood(gameState)
+
+        # Transforma a lista de comidas em uma lista de posicoes
+        estadosComidas = comida.asList()
+
+        # Descobre a distancia do agente para cada comida
+        listaDistanciasComidas = [self.getMazeDistance(myPos, x) for x in estadosComidas]
+
+        # Calcula a menor distancia para uma comida
+        distanciaComida = min(listaDistanciasComidas)
+
+        return distanciaComida
+
