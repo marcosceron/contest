@@ -72,6 +72,7 @@ class PaiAgent(CaptureAgent):
         CaptureAgent.registerInitialState in captureAgents.py.
         '''
         self.start = gameState.getAgentPosition(self.index)
+        self.comidasInicio = self.getComidas(gameState)
         CaptureAgent.registerInitialState(self, gameState)
 
         '''
@@ -214,7 +215,8 @@ class OfensivoAgent(PaiAgent):
         myState = novoEstadoDoJogo.getAgentState(self.index)
 
         # Pontos recebe a distancia para a comida mais proxima
-        pontos = self.getDistanciaComidaMaisProxima(gameState, myPos)
+        distanciaComidaMaisProxima = self.getDistanciaComidaMaisProxima(gameState, myPos)
+        pontos = distanciaComidaMaisProxima
 
         # Descobre a distancia ao inimigo mais proximo
         distanciaInimigoMaisProximo = self.getDistanciaInimigoMaisProximo(gameState, myPos)
@@ -261,13 +263,30 @@ class OfensivoAgent(PaiAgent):
         if acao == Directions.STOP:
             pontos = pontos + 100
 
+
+        # diferencaInimigoComida = distanciaInimigoMaisProximo - distanciaComidaMaisProxima
+        # if diferencaInimigoComida < 0:
+        #     pontos = pontos + 10
+        # else:
+        #     pontos = pontos - 10
+        comidasInicio = len(self.comidasInicio)
         comidasRestantes = len(self.getComidas(gameState))
 
         placar = self.getScore(gameState)
-        # Se comeu duas comidas, volta pro inicio
-        if comidasRestantes <= 18:
+        diferencaComidas = comidasInicio - comidasRestantes
+        if diferencaComidas >= 2 and myState.isPacman:
             distanciaInicio = self.getMazeDistance(myPos, self.start)
             pontos = distanciaInicio
+        elif diferencaComidas >= 2 and not myState.isPacman:
+            pontos = distanciaInimigoMaisProximo
+
+            # Evitar ao maximo ficar parado
+            if acao == Directions.STOP:
+                pontos = pontos + 100
+
+            # Evitar fazer a ação contrária
+            rev = Directions.REVERSE[gameState.getAgentState(self.index).configuration.direction]
+            if acao == rev: pontos = pontos + 10
 
         # util.pause()
         # print pontos
@@ -342,8 +361,8 @@ class DefensivoAgent(PaiAgent):
 
         # Se o agente esta assustado
         if myState.scaredTimer > 0:
-            print "Estou assustado"
-            util.pause()
+            # print "Estou assustado"
+            # util.pause()
             if distanciaInimigoMaisProximo == 0:
                 pontos = pontos + 100000  # Aumenta 100000 caso o inimigo esteja na mesma posicao
             elif distanciaInimigoMaisProximo < 3:
