@@ -23,7 +23,7 @@ import game
 #################
 
 def createTeam(firstIndex, secondIndex, isRed,
-               first = 'MaisPertoAgent', second = 'DefensivoAgent'):
+               first = 'TestAgent', second = 'DefensivoAgent'):
   """
   This function should return a list of two agents that will form the
   team, initialized using firstIndex and secondIndex as their agent
@@ -72,6 +72,7 @@ class TestAgent(CaptureAgent):
     on initialization time, please take a look at
     CaptureAgent.registerInitialState in captureAgents.py.
     '''
+    self.start = gameState.getAgentPosition(self.index)
     CaptureAgent.registerInitialState(self, gameState)
 
     '''
@@ -104,6 +105,9 @@ class TestAgent(CaptureAgent):
 
       # Descobre a posicao do agente apos a acao
       myPos = self.getMinhaPosicao(novoEstadoDoJogo)
+
+      # Estado do agente apos a acao
+      myState = novoEstadoDoJogo.getAgentState(self.index)
 
       # Pontos recebe a distancia para a comida mais proxima
       pontos = self.getDistanciaComidaMaisProxima(gameState, myPos)
@@ -147,11 +151,11 @@ class TestAgent(CaptureAgent):
         # print "Defensores assustados"
         # util.pause()
         if distInimigo == 0:
-          pontos = pontos - 100000  # Aumenta 100000 caso o inimigo esteja na mesma posicao
+          pontos = pontos - 100000  # Diminui 100000 caso o inimigo esteja na mesma posicao
         elif distInimigo < 3:
-          pontos = pontos - 100  # Aumenta 100 caso o inimigo esteja bem proximo
+          pontos = pontos - 100  # Diminui 100 caso o inimigo esteja bem proximo
         elif distInimigo < 5:
-          pontos = pontos - 10  # Aumenta 10 caso o inimigo esteja proximo
+          pontos = pontos - 10  # Diminui 10 caso o inimigo esteja proximo
 
 
       # Evitar ao maximo ficar parado
@@ -159,6 +163,13 @@ class TestAgent(CaptureAgent):
           pontos = pontos + 100
 
 
+      comidasRestantes = len(self.getComidas(gameState))
+
+      # Se comeu duas comidas
+      if comidasRestantes <= 18:
+          distanciaInicio = self.getMazeDistance(myPos, self.start)
+
+      #util.pause()
       #print pontos
       #util.pause()
       return pontos
@@ -278,14 +289,13 @@ class DefensivoAgent(CaptureAgent):
         myPos = novoEstadoDoJogo.getAgentPosition(self.index)
 
         # Pega todos os inimigos
-        inimigos = [novoEstadoDoJogo.getAgentState(i) for i in self.getOpponents(novoEstadoDoJogo)]
+        inimigos = [gameState.getAgentState(i) for i in self.getOpponents(gameState)]
         distanciaInimigos = [self.getMazeDistance(myPos, i.getPosition()) for i in inimigos]
         distanciaInimigoMaisProximo = min(distanciaInimigos)
         pontos = distanciaInimigoMaisProximo
         # Pega os 'invasores' -> inimigos que estao com estado isPacman True e que tem valor em getPosition()
         invasores = [a for a in inimigos if a.isPacman and a.getPosition() != None]
 
-        #pontos = len(invasores) + 1000
         # Se o agente esta assustado
         if myState.scaredTimer > 0:
             print "Estou assustado"
@@ -299,7 +309,7 @@ class DefensivoAgent(CaptureAgent):
 
 
 
-
+        # Aqui garante que ele nunca vai passar do meio
         if myState.isPacman:
             # Atacando
             pontos = pontos + 99999
@@ -320,6 +330,18 @@ class DefensivoAgent(CaptureAgent):
         return pontos
 
 
+
+
+
+
+
+
+
+
+
+
+
+# Deixa o MaisPerto aqui para testes
 class MaisPertoAgent(CaptureAgent):
     """
     A Dummy agent to serve as an example of the necessary agent structure.
