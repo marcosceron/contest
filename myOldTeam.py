@@ -73,8 +73,6 @@ class PaiAgent(CaptureAgent):
         '''
         self.start = gameState.getAgentPosition(self.index)
         self.comidasInicio = self.getComidas(gameState)
-        self.comidasInimigoInicio = self.getComidasInimigos(gameState)
-
         CaptureAgent.registerInitialState(self, gameState)
 
         '''
@@ -161,11 +159,6 @@ class PaiAgent(CaptureAgent):
         estadosComidas = comida.asList()
         return estadosComidas
 
-    def getComidasInimigos(self, gameState):
-        comidasInimigos = self.getFoodYouAreDefending(gameState)
-        estadosComidasInimigos = comidasInimigos.asList()
-        return estadosComidasInimigos
-
     def getDistanciasComidas(self, gameState, pos):
         # Retorna as distancias a cada comida
         comidas = self.getComidas(gameState)
@@ -202,17 +195,6 @@ class PaiAgent(CaptureAgent):
         capsulas = self.getCapsulas(gameState)
         posCapsulaMaisProxima = min(capsulas, key=lambda x: self.getMazeDistance(pos, x))
         return posCapsulaMaisProxima
-
-    def getPlacar(self, gameState):
-        comidasInicio = len(self.comidasInicio)
-        comidasRestantes = len(self.getComidas(gameState))
-        comidasInimigoInicio = len(self.comidasInimigoInicio)
-        comidasInimigoRestantes = len(self.getComidasInimigos(gameState))
-        # minha pontuacao
-        diferencaComidas = comidasInicio - comidasRestantes
-        # pontuacao inimigo
-        diferencaComidasInimigo = comidasInimigoInicio - comidasInimigoRestantes
-        return diferencaComidas - diferencaComidasInimigo
 
 
 class OfensivoAgent(PaiAgent):
@@ -290,29 +272,12 @@ class OfensivoAgent(PaiAgent):
         comidasInicio = len(self.comidasInicio)
         comidasRestantes = len(self.getComidas(gameState))
 
-        comidasInimigoInicio = len(self.comidasInimigoInicio)
-        comidasInimigoRestantes = len(self.getComidasInimigos(gameState))
-
-        # minha pontuacao
+        placar = self.getScore(gameState)
         diferencaComidas = comidasInicio - comidasRestantes
-        # pontuacao inimigo
-        diferencaComidasInimigo = comidasInimigoInicio - comidasInimigoRestantes
-
-        # if diferencaComidasInimigo > 0:
-        #     print "Entrou aqui"
-        #     print diferencaComidasInimigo
-        #     util.pause()
-
-        placar = self.getPlacar(gameState)
-        #print placar
-
-        #if diferencaComidas >= 2 and myState.isPacman:
-        #elif diferencaComidas >= 2 and not myState.isPacman:
-
-        if diferencaComidas - diferencaComidasInimigo >= 2 and myState.isPacman:
+        if diferencaComidas >= 2 and myState.isPacman:
             distanciaInicio = self.getMazeDistance(myPos, self.start)
             pontos = distanciaInicio
-        elif diferencaComidas - diferencaComidasInimigo >= 2 and not myState.isPacman:
+        elif diferencaComidas >= 2 and not myState.isPacman:
             pontos = distanciaInimigoMaisProximo
 
             # Evitar ao maximo ficar parado
@@ -322,10 +287,6 @@ class OfensivoAgent(PaiAgent):
             # Evitar fazer a ação contrária
             rev = Directions.REVERSE[gameState.getAgentState(self.index).configuration.direction]
             if acao == rev: pontos = pontos + 10
-        #elif diferencaComidas - diferencaComidasInimigo < 5:
-
-
-
 
         # util.pause()
         # print pontos
@@ -354,15 +315,15 @@ class DefensivoAgent(PaiAgent):
         IMPORTANT: This method may run for at most 15 seconds.
         """
 
-        ''' 
+        '''
         Make sure you do not delete the following line. If you would like to
         use Manhattan distances instead of maze distances in order to save
         on initialization time, please take a look at
-        CaptureAgent.registerInitialState in captureAgents.py. 
+        CaptureAgent.registerInitialState in captureAgents.py.
         '''
         CaptureAgent.registerInitialState(self, gameState)
 
-        ''' 
+        '''
         Your initialization code goes here, if you need any.
         '''
 
