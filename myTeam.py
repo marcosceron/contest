@@ -232,8 +232,10 @@ class OfensivoAgent(PaiAgent):
         # Estado do agente apos a acao
         myState = novoEstadoDoJogo.getAgentState(self.index)
 
+        distanciaComidaMaisProxima = 0
         # Pontos recebe a distancia para a comida mais proxima
-        distanciaComidaMaisProxima = self.getDistanciaComidaMaisProxima(gameState, myPos)
+        if len(self.getComidas(gameState)) > 0:
+            distanciaComidaMaisProxima = self.getDistanciaComidaMaisProxima(gameState, myPos)
         pontos = distanciaComidaMaisProxima
 
         # Descobre a distancia ao inimigo mais proximo
@@ -309,26 +311,27 @@ class OfensivoAgent(PaiAgent):
         #if diferencaComidas >= 2 and myState.isPacman:
         #elif diferencaComidas >= 2 and not myState.isPacman:
 
-        if diferencaComidas - diferencaComidasInimigo >= 2 and myState.isPacman:
+        if len(self.getComidas(gameState)) > 0:
+            # if diferencaComidasInimigo > 0:
+            if gameState.data.timeleft > 800:
+            # if len(invasores) > 0:
+                if placar > 0 and myState.isPacman:
+                    distanciaInicio = self.getMazeDistance(myPos, self.start)
+                    pontos = distanciaInicio
+                elif placar > 0 and not myState.isPacman:
+                    pontos = distanciaInimigoMaisProximo
+
+        elif len(self.getComidas(gameState)) == 0:
             distanciaInicio = self.getMazeDistance(myPos, self.start)
             pontos = distanciaInicio
-        elif diferencaComidas - diferencaComidasInimigo >= 2 and not myState.isPacman:
-            pontos = distanciaInimigoMaisProximo
+            
+        # Evitar ao maximo ficar parado
+        if acao == Directions.STOP:
+            pontos = pontos + 100
+        # Evitar fazer a ação contrária
+        rev = Directions.REVERSE[gameState.getAgentState(self.index).configuration.direction]
+        if acao == rev: pontos = pontos + 10
 
-            # Evitar ao maximo ficar parado
-            if acao == Directions.STOP:
-                pontos = pontos + 100
-
-            # Evitar fazer a ação contrária
-            rev = Directions.REVERSE[gameState.getAgentState(self.index).configuration.direction]
-            if acao == rev: pontos = pontos + 10
-        #elif diferencaComidas - diferencaComidasInimigo < 5:
-
-
-
-
-        # util.pause()
-        # print pontos
         return pontos
 
 
